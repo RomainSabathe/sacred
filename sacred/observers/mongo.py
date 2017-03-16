@@ -160,15 +160,27 @@ class MongoObserver(RunObserver):
         self.run_entry['resources'].append((filename, md5hash))
         self.save()
 
-    def artifact_event(self, name, filename):
+    def artifact_event(self, name, filename, overwrite):
         with open(filename, 'rb') as f:
             run_id = self.run_entry['_id']
             db_filename = 'artifact://{}/{}/{}'.format(self.runs.name, run_id,
                                                        name)
+            if overwrite and self.fs.exists({'filename': db_filename}):
+                document = self.fs.find_one({'filename': db_filename})
+                self.fs.delete(document._id)
             file_id = self.fs.put(f, filename=db_filename)
+        if overwrite:
+            candidates = [info_dic for info_dic in self.run_entry['artifacts']
+                          if info_dic['name'] == name]
+            #TODO: should we deal with the case where len(candidates) > 1? This
+            #      shouldn't happen anyway.
+            if candidates:
+                self.run_entry['artifacts'].remove(candidates[0])
         self.run_entry['artifacts'].append({'name': name,
                                             'file_id': file_id})
         self.save()
+
+        return db_filename
 
     def insert(self):
         if self.overwrite:

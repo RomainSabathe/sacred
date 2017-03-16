@@ -278,7 +278,7 @@ class Experiment(Ingredient):
         assert self.current_run is not None, "Can only be called during a run."
         return self.current_run.open_resource(filename)
 
-    def add_artifact(self, filename, name=None):
+    def add_artifact(self, filename, name=None, overwrite=False):
         """Add a file as an artifact.
 
         In Sacred terminology an artifact is a file produced by the experiment
@@ -295,9 +295,13 @@ class Experiment(Ingredient):
         name : str, optional
             optionally set the name of the artifact.
             Defaults to the relative file-path.
+        overwrite: bool, optional
+            if set to True and that such a file has been saved before, will
+            overwite a previous version (if any) of the said file. Useful when
+            saving models during training to avoid memory over-usage.
         """
         assert self.current_run is not None, "Can only be called during a run."
-        self.current_run.add_artifact(filename, name)
+        self.current_run.add_artifact(filename, name, overwrite)
 
     @property
     def info(self):

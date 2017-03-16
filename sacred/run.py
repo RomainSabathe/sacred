@@ -134,7 +134,7 @@ class Run(object):
         self._emit_resource_added(filename)  # TODO: maybe non-blocking?
         return open(filename, 'r')  # TODO: How to deal with binary mode?
 
-    def add_artifact(self, filename, name=None):
+    def add_artifact(self, filename, name=None, overwrite=False):
         """Add a file as an artifact.
 
         In Sacred terminology an artifact is a file produced by the experiment
@@ -150,10 +150,14 @@ class Run(object):
         name : str, optional
             optionally set the name of the artifact.
             Defaults to the relative file-path.
+        overwrite: bool, optional
+            if set to True and that such a file has been saved before, will
+            overwite a previous version (if any) of the said file. Useful when
+            saving models during training to avoid memory over-usage.
         """
         filename = os.path.abspath(filename)
         name = os.path.relpath(filename) if name is None else name
-        self._emit_artifact_added(name, filename)
+        self._emit_artifact_added(name, filename, overwrite)
 
     def __call__(self, *args):
         r"""Start this run.
@@ -337,11 +341,12 @@ class Run(object):
         for observer in self.observers:
             self._safe_call(observer, 'resource_event', filename=filename)
 
-    def _emit_artifact_added(self, name, filename):
+    def _emit_artifact_added(self, name, filename, overwrite):
         for observer in self.observers:
             self._safe_call(observer, 'artifact_event',
                             name=name,
-                            filename=filename)
+                            filename=filename,
+                            overwrite=overwrite)
 
     def _safe_call(self, obs, method, **kwargs):
         if obs not in self._failed_observers and hasattr(obs, method):

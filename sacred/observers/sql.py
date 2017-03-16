@@ -350,7 +350,7 @@ class SqlObserver(RunObserver):
         self.run.resources.append(res)
         self.session.commit()
 
-    def artifact_event(self, name, filename):
+    def artifact_event(self, name, filename, overwrite):
         a = Artifact.create(name, filename)
         self.run.artifacts.append(a)
         self.session.commit()
